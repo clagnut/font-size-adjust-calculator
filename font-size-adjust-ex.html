@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+
+	<head>
+		<meta charset="utf-8"/>
+
+		<title>Font metrics calculator for font-size-adjust</title>
+		<style>
+		body {
+			font-family: ui-sans-serif, sans-serif;
+			line-height:1.5;
+			padding:0 2vmin;
+		}
+		code {
+			font-family: ui-monospace, monospace;
+		}
+		.prose {
+			max-width: 35em;
+		}
+		.font-render {
+			padding:1vmin;
+			border:1px solid #ccc;
+			flex: 1 0 25em;
+		}
+		#x {
+			font-family: "Comic Sans MS";
+			font-weight: normal;
+			font-style: normal;
+			font-synthesis: none;
+		}
+		#filename {
+			font-weight: inherit;
+			margin-top:0;
+		}
+		.sidebyside {
+			display: flex;
+			align-items: flex-end;
+			margin-top: 0.5em;
+		}
+		.sidebyside div {
+			background: #333;
+		}
+		#a, #c {
+			height: 10em;
+			width:10em;
+		}
+		#b, #d {
+			height: 10ex;
+			width: 10ch;
+			opacity: 0.5;
+			color: #777;
+		}
+		#d {
+			height: 10cap;
+		}
+		form {
+			background:#eee;
+			padding:0.5em 1vmin;
+			flex: 1 0 20em;
+		}
+		h2 {
+			margin-top:0;
+		}
+		input, button, textarea, select, option {
+		  font-family: inherit;
+		  font-size: 1rem;
+		}
+		input[type='text'] {
+			width: 100%;
+		}
+		input[type='number'] {
+			width: 6ch;
+		}
+		#fsa {
+			display: block;
+			width: 34ch;
+			font-family: ui-monospace, monospace;
+		}
+		.label-control {
+			margin-block-end:0.5em;
+		}
+		.hint {
+			font-size: 85%;
+			white-space: nowrap;
+		}
+		.submit {
+			font-size: 1.25rem;
+		}
+		footer {
+			margin-top:2lh;
+			font-size:0.85rem;
+		}
+		.calculator {
+			margin-top:2lh;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 1rem;
+			align-items: center;
+		}
+
+		</style>
+	</head>
+	<body>
+		<section class="prose">
+		<h1>Font metrics calculator</h1>
+
+		<p>This tool calculates the <strong>aspect value</strong> for an uploaded font. Use this value as your <code>font-size-adjust</code> number. For more details see <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-size-adjust">MDN</a>.</p>
+		<p>This tool works entirely client-side. Files are not uploaded to a server.</p>
+
+		</section>
+
+		<div class="calculator">
+			<form>
+			<h2>Font config</h2>
+			<div class="label-control">
+				<label>Select font file
+				<input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2"> <span class="hint">.ttf, .otf, .woff, .woff2</span>
+				<input type="hidden" id="uploadedFilename">
+				</label>
+			</div>
+
+			<fieldset>
+			<legend>Variable font settings (if applicable)</legend>
+			<div class="label-control">
+			<label>font-weight
+			<input type="number" id="fontWeight" size="5" value="" onchange="getFSA()"></label>
+			</div>
+
+			<div class="label-control">
+			<label>font-style
+			<select id="fontStyle" onchange="getFSA()">
+				<option value=""></option>
+				<option value="normal">normal</option>
+				<option value="italic">italic</option>
+				<option value="oblique">oblique</option>
+			</select>
+			<input type="number" id="fontSlant" size="5" onchange="getFSA()">deg
+			</label>
+			</div>
+
+			<div class="label-control">
+			<label>font-stretch
+			<input type="number" id="fontWidth" size="5" onchange="getFSA()">%</label>
+			</div>
+
+			<div class="label-control">
+			<label>optical size
+			<input type="number" id="opsz" size="5" onchange="getFSA()">
+			</label>
+			</div>
+			</fieldset>
+
+			<p class="submit">
+			<input type="button" value="Calculate" onclick="getFSA()">
+			<textarea rows="4" id="fsa"></textarea>
+		</p>
+
+			</form>
+
+			<div class="font-render">
+				<div id="x">
+					<h3 id="filename">Upload a font</h3>
+					<div class="sidebyside">
+					<div id="a"> </div>
+					<div id="b"> </div>
+					</div>
+					<div class="sidebyside">
+					<div id="c"> </div>
+					<div id="d"> </div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<footer><p>This tool was originally made by <a href="https://clagnut.com/">Richard Rutter</a> for his book <a href="https://book.webtypography.net">Web Typography</a>. Feel free to improve it by forking <a href="https://github.com/clagnut/font-size-adjust-calculator/">on Github</a>.</p></footer>
+
+		<script>
+		// handle font upload
+
+		const fontInput = document.getElementById('fontInput');
+		const previewText = document.getElementById('x');
+		const uploadedFilename = document.getElementById('uploadedFilename');
+
+		fontInput.addEventListener('change', function(e) {
+		  const file = e.target.files[0];
+		  if (!file) return;
+
+		  const reader = new FileReader();
+
+		  reader.onload = async function(event) {
+			const fontBuffer = event.target.result;
+
+			// 1. Define a unique name for the font
+			const fontName = 'CustomUserFont';
+
+			try {
+			  // 2. Create the FontFace object from the ArrayBuffer
+			  const userFont = new FontFace(fontName, fontBuffer, {
+				  weight: "1 1000",
+				  stretch: "10% 500%",
+				  style: "oblique -90deg 90deg"
+			  });
+
+			  // 3. Load the font
+			  await userFont.load();
+
+			  // 4. Add the font to the document
+			  document.fonts.add(userFont);
+
+			  // 5. Apply it to your element via CSS
+			  previewText.style.fontFamily = fontName;
+			  uploadedFilename.value = `${file.name}`;
+
+
+			  console.log(`${file.name} loaded successfully!`);
+			} catch (err) {
+			  console.error('Error loading font:', err);
+			  alert('Failed to load font. Make sure it is a valid font file.');
+			}
+			getFSA();
+		  };
+
+		  reader.readAsArrayBuffer(file);
+		});
+
+		// Update font style
+		function updateFont() {
+			const fontWeightInput = document.getElementById("fontWeight").value;
+			const fontStyleInput = document.getElementById("fontStyle").value;
+			const fontSlantInput = document.getElementById("fontSlant").value;
+			const fontWidthInput = document.getElementById("fontWidth").value;
+			const opszInput = document.getElementById("opsz").value;
+
+			if ((fontStyleInput == "oblique") && (fontSlantInput != "")) {
+				fontStyleValue = "oblique " + fontSlantInput + "deg";
+			} else {
+				fontStyleValue = fontSlantInput;
+			}
+
+			if (opszInput == "") {
+				opszValue = '';
+			} else {
+				opszValue = '"opsz" ' + opszInput;
+			}
+
+			document.getElementById("x").style.fontWeight = fontWeightInput;
+			document.getElementById("x").style.fontStyle = fontStyleValue;
+			document.getElementById("x").style.fontStretch = fontWidthInput + "%";
+			document.getElementById("x").style.fontVariationSettings = opszValue;
+			document.getElementById("fsa").value = "";
+		}
+
+		// Calculate font-stretch-adjust values
+		function getFSA(setFocus) {
+
+			updateFont();
+			printFont();
+
+			const original = document.getElementById("a");
+			const compare = document.getElementById("b");
+			const original2 = document.getElementById("c");
+			const compare2 = document.getElementById("d");
+			document.getElementById("fsa").value = "";
+
+			const aspectratio = compare.offsetHeight / original.offsetHeight;
+			const aspectratiorounded = Math.round(aspectratio*1000)/1000;
+			const widthratio = compare.offsetWidth / original.offsetWidth;
+			const widthratiorounded = Math.round(widthratio*1000)/1000;
+			const capratio = compare2.offsetHeight / original2.offsetHeight;
+			const capratiorounded = Math.round(capratio*1000)/1000;
+
+
+			let fsaOutput = "font-size-adjust: " + aspectratiorounded;
+			fsaOutput = fsaOutput + "\n" + "font-size-adjust: ex-height " + aspectratiorounded;
+			fsaOutput = fsaOutput + "\n" + "font-size-adjust: ch-width " + widthratiorounded;
+			fsaOutput = fsaOutput + "\n" + "font-size-adjust: cap-height " + capratiorounded;
+			document.getElementById("fsa").value = fsaOutput;
+
+			if (setFocus == true) {
+				document.getElementById("fsa").select();
+			}
+
+			return false;
+
+		}
+
+		// Print font to screen
+		function printFont() {
+			const uploadedFilename = document.getElementById("uploadedFilename").value;
+			const fontWeightInput = document.getElementById("fontWeight").value;
+			const fontStyleInput = document.getElementById("fontStyle").value;
+			const fontSlantInput = document.getElementById("fontSlant").value;
+			const fontWidthInput = document.getElementById("fontWidth").value;
+			const opszInput = document.getElementById("opsz").value;
+			const filenameText = document.getElementById('filename');
+
+			uploadedFilenameText = uploadedFilename;
+			fontwidthText = fontWidthInput;
+			fontslantText = fontSlantInput;
+			if (uploadedFilename == "") {uploadedFilenameText = "Comic Sans (no font uploaded)";}
+			if (fontWidthInput != "") {fontwidthText = fontwidthText + "%";}
+			if (fontSlantInput != "") {fontslantText = fontslantText + "deg";}
+
+			const fontDetails = uploadedFilenameText + " " + fontWeightInput + " " + fontStyleInput + " " + fontslantText + " " + fontwidthText + " " + opszInput;
+
+			filenameText.innerText = fontDetails;
+		}
+
+		</script>
+	</body>
+</html>
