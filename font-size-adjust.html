@@ -44,11 +44,22 @@ Feel free to fork it and make it better for the world: https://github.com/clagnu
 			display: flex;
 			align-items: flex-end;
 			margin-top: 0.5em;
+			gap: 1px;
 		}
 		.sidebyside div {
 			background: #333;
+			display: flex;
+			justify-content: center;
+			align-items: center;
 		}
-		#a, #c {
+
+		.sidebyside div span {
+			font-family: ui-sans-serif, sans-serif;
+			font-size:0.85rem;
+			color:#fff;
+		}
+
+		#a {
 			height: 10em;
 			width:10em;
 		}
@@ -56,10 +67,11 @@ Feel free to fork it and make it better for the world: https://github.com/clagnu
 			height: 10ex;
 			width: 10ch;
 			opacity: 0.5;
-			color: #777;
+			color: #555;
 		}
 		#d {
 			height: 10cap;
+			color: #444;
 		}
 		form {
 			background:#eee;
@@ -81,7 +93,7 @@ Feel free to fork it and make it better for the world: https://github.com/clagnu
 		}
 		#fsa {
 			display: block;
-			width: 34ch;
+			width: 35ch;
 			font-family: ui-monospace, monospace;
 		}
 		.label-control {
@@ -167,14 +179,11 @@ Feel free to fork it and make it better for the world: https://github.com/clagnu
 
 			<div class="font-render">
 				<div id="x">
-					<h3 id="filename">Upload a font</h3>
+					<h3 id="filename">Comic Sans (no font uploaded)</h3>
 					<div class="sidebyside">
-					<div id="a"> </div>
-					<div id="b"> </div>
-					</div>
-					<div class="sidebyside">
-					<div id="c"> </div>
-					<div id="d"> </div>
+					<div id="a"><span>1em × 1em</span></div>
+					<div id="d"><span>1ch × 1cap</span></div>
+					<div id="b"><span>1ch × 1ex</span></div>
 					</div>
 				</div>
 			</div>
@@ -266,7 +275,6 @@ Feel free to fork it and make it better for the world: https://github.com/clagnu
 
 			const original = document.getElementById("a");
 			const compare = document.getElementById("b");
-			const original2 = document.getElementById("c");
 			const compare2 = document.getElementById("d");
 			document.getElementById("fsa").value = "";
 
@@ -274,7 +282,7 @@ Feel free to fork it and make it better for the world: https://github.com/clagnu
 			const aspectratiorounded = Math.round(aspectratio*1000)/1000;
 			const widthratio = compare.offsetWidth / original.offsetWidth;
 			const widthratiorounded = Math.round(widthratio*1000)/1000;
-			const capratio = compare2.offsetHeight / original2.offsetHeight;
+			const capratio = compare2.offsetHeight / original.offsetHeight;
 			const capratiorounded = Math.round(capratio*1000)/1000;
 
 
