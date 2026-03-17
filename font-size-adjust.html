@@ -15,7 +15,12 @@
 			font-family: ui-monospace, monospace;
 		}
 		.prose {
-			max-width: 35em;
+			max-width: 40em;
+			text-wrap: pretty;
+		}
+		h1 {
+			text-wrap: balance;
+			line-height: 1;
 		}
 		.font-render {
 			padding:1vmin;
@@ -102,7 +107,7 @@
 	</head>
 	<body>
 		<section class="prose">
-		<h1>Font metrics calculator</h1>
+		<h1>Font metrics calculator for font-size-adjust</h1>
 
 		<p>This tool calculates font metrics for an uploaded font. The values it outputs, such as <i>aspect ratio</i>, can be used with the CSS <code>font-size-adjust</code> property. For more details see <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-size-adjust">MDN</a>.</p>
 		<p>This tool works entirely client-side. Files are not uploaded to a server.</p>
